@@ -1,0 +1,67 @@
+{
+    "interactionModel": {
+        "languageModel": {
+            "invocationName": "word catcher",
+            "intents": [
+                {
+                    "name": "AMAZON.CancelIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.HelpIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.StopIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.NavigateHomeIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.YesIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AnswerIntent",
+                    "slots": [
+                        {
+                            "name": "answer",
+                            "type": "Answers"
+                        }
+                    ],
+                    "samples": [
+                        "it is {answer}",
+                        "I think it is {answer}",
+                        "is it {answer}"
+                    ]
+                },
+                {
+                    "name": "AnswersOnlyIntent",
+                    "slots": [
+                        {
+                            "name": "answer",
+                            "type": "Answers"
+                        }
+                    ],
+                    "samples": [
+                        "{answer}"
+                    ]
+                }
+            ],
+            "types": [
+                {
+                    "name": "Answers",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "clock"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}

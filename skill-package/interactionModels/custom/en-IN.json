@@ -56,6 +56,14 @@
                     "values": [
                         {
                             "name": {
+                                "value": "time",
+                                "synonyms": [
+                                    "times"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
                                 "value": "clock"
                             }
                         }

@@ -15,17 +15,10 @@ const LaunchRequestHandler = {
         const sessionAttributes = attributesManager.getSessionAttributes();
 
         const { question } = sessionAttributes;
-        // let persistentAttributes = await attributesManager.getPersistentAttributes();
-        // console.log("PERSPERSPERS");
-        // console.log(persistentAttributes);
-        // if(persistentAttributes.hintUsed >= 1){
-        //     // Code for not asking question
-        // }
 
         /* First Time User */
         const speakOutput = handlerInput.t('WELCOME_MSG') + handlerInput.t('RULES') + handlerInput.t('READY');
         let questionMode = 'daily';
-        
         sessionAttributes.question = {
             'questionMode': questionMode,
             'hintUsed': 0
@@ -52,17 +45,28 @@ const YesIntentHandler = {
         const sessionAttributes = attributesManager.getSessionAttributes();
         // TODO: what does { } mean and how does this stuff work? 
         const {question} = sessionAttributes; 
+        let speakOutput; 
+        if(question.questionMode === 'daily'){
+            const currentQuestion = getCurrentQuestion();
+            question.answer = currentQuestion.answer; 
+            attributesManager.setSessionAttributes(sessionAttributes);
+    
+            speakOutput = currentQuestion.question;
+            return handlerInput.responseBuilder
+            .speak(speakOutput)
+            .reprompt(speakOutput)
+            .getResponse();
+        } else if(question.questionMode === 'weekly'){
+            const currentQuestion = getCurrentQuestion(true);
+            speakOutput = currentQuestion.question; 
+            question.answer = currentQuestion.answer; 
 
-        const currentQuestion = getCurrentQuestion();
-        question.answer = currentQuestion.answer; 
-        attributesManager.setSessionAttributes(sessionAttributes);
-
-        let speakOutput = currentQuestion.question;
-        return handlerInput.responseBuilder
-        .speak(speakOutput)
-        .reprompt(speakOutput)
-        .getResponse();
-       
+            attributesManager.setSessionAttributes(sessionAttributes);
+            return handlerInput.responseBuilder
+            .speak(speakOutput)
+            .reprompt(speakOutput)
+            .getResponse();
+        }   
     }
 }
 
@@ -82,13 +86,14 @@ const AnswersIntentHandler = {
         const answer = handlerInput.requestEnvelope.request.intent.slots.answer.value; 
         const actualAnswer = sessionAttributes.question.answer;
         let speakOutput = "";
-        let currentQuestion = getCurrentQuestion();
+        console.log("Answer");
+        console.log(actualAnswer);
         const hintUsed = sessionAttributes.question.hintUsed;
-        console.log("Hint Used"+hintUsed);
+            console.log("Hint Used"+hintUsed);
 
         if(answer === actualAnswer){
             speakOutput = handlerInput.t('CORRECT_ANSWER');
-            
+            //TODO: Have the right mechanism for the weekly answers
             // The Points Mechanism 
             switch(hintUsed){
                 case 0:
@@ -103,7 +108,14 @@ const AnswersIntentHandler = {
                 default:
                 break;
             }
+            speakOutput += handlerInput.t('WEEK_QUESTION_PROMPT');
+            question.questionMode = 'weekly';
+            attributesManager.setSessionAttributes(sessionAttributes);
+
         } else {
+            let currentQuestion = getCurrentQuestion();
+            
+
             speakOutput = handlerInput.t('WRONG_ANSWER');
             if(hintUsed === 0){
                 speakOutput += currentQuestion.first_hint
@@ -212,13 +224,20 @@ const LocalisationRequestInterceptor = {
 };
 
 /* Question for the Day */
-function getCurrentQuestion() {
+function getCurrentQuestion(weeklyMode) {
     const today = new Date();
     const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
     const pastDaysOfYear = (today - firstDayOfYear) / 86400000;
     const weekNumber = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7)
     let weekString = "week" + weekNumber.toString();
-    let currentDay = today.getDay();
+    let currentDay;
+    console.log(weeklyMode)
+    console.log(weekString);
+    if(weeklyMode === true){
+        currentDay = 0;
+    } else {
+        currentDay = today.getDay();
+    }
     return questions[weekString][currentDay];
 
 }

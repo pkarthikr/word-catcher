@@ -7,7 +7,8 @@ module.exports = {
             READY: 'Are you ready?',
             CORRECT_ANSWER: 'That is the correct answer',
             WRONG_ANSWER: 'Oops! That is wrong.',
-            HINT_PROMPT: 'But fear not, I\'ve got a hint for you'
+            HINT_PROMPT: 'But fear not, I\'ve got a hint for you',
+            WEEK_QUESTION_PROMPT: 'Do you want to take a guess at this week\'s theme?'
         }
     }
 }

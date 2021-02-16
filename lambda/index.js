@@ -92,40 +92,79 @@ const AnswersIntentHandler = {
             console.log("Hint Used"+hintUsed);
 
         if(answer === actualAnswer){
-            speakOutput = handlerInput.t('CORRECT_ANSWER');
             //TODO: Have the right mechanism for the weekly answers
-            // The Points Mechanism 
-            switch(hintUsed){
-                case 0:
-                    speakOutput += "You get 10 points"; 
-                    break;
-                case 1:
-                    speakOutput += "You get 5 points"; 
-                    break; 
-                case 2:
-                    speakOutput += "You get 3 points";
-                    break;
-                default:
-                break;
-            }
-            speakOutput += handlerInput.t('WEEK_QUESTION_PROMPT');
-            question.questionMode = 'weekly';
-            attributesManager.setSessionAttributes(sessionAttributes);
-
-        } else {
-            let currentQuestion = getCurrentQuestion();
-            
-
-            speakOutput = handlerInput.t('WRONG_ANSWER');
-            if(hintUsed === 0){
-                speakOutput += currentQuestion.first_hint
-            } else if(hintUsed === 1){
-                speakOutput += currentQuestion.second_hint
+            if(sessionAttributes.question.questionMode === 'weekly'){
+                // Weekly logic
+                let today = new Date();
+                let currentDay = today.getDay();
+                switch(currentDay){
+                    case 0:
+                        speakOutput += "You get 5 points";
+                        break;
+                    case 1:
+                        speakOutput += "You get 60 points";
+                        break;
+                    case 2:
+                        speakOutput += "You get 50 points";
+                        break;
+                    case 3:
+                        speakOutput += "You get 40 points";
+                        break;
+                    case 4:
+                        speakOutput += "You get 30 points";
+                        break;
+                    case 5:
+                        speakOutput += "You get 20 points";
+                        break;
+                    case 6:
+                        speakOutput += "You get 10 points";
+                        break;
+                }
+                speakOutput += handlerInput.t('UPSELL_COME_BACK');
             } else {
-                speakOutput = 'No more hints for you';
+                speakOutput = handlerInput.t('CORRECT_ANSWER');
+                // The Points Mechanism 
+                switch(hintUsed){
+                    case 0:
+                        speakOutput += "You get 10 points"; 
+                        break;
+                    case 1:
+                        speakOutput += "You get 5 points"; 
+                        break; 
+                    case 2:
+                        speakOutput += "You get 3 points";
+                        break;
+                    default:
+                    break;
+                }
+                speakOutput += handlerInput.t('WEEK_QUESTION_PROMPT');
+                question.questionMode = 'weekly';
+                attributesManager.setSessionAttributes(sessionAttributes);
             }
-            question.hintUsed = hintUsed + 1;
-            attributesManager.setSessionAttributes(sessionAttributes);
+        } else {
+            if(sessionAttributes.question.questionMode === 'weekly'){
+                let today = new Date();
+                let currentDay = today.getDay();
+                if(currentDay != 0){
+                    speakOutput += handlerInput.t('WEEKLY_WRONG_ANSWER');
+                } else {
+                    speakOutput += handlerInput.t('WEEKLY_WRONG_ANSWER_SUNDAY');
+                }
+                 
+            } else {
+                let currentQuestion = getCurrentQuestion();
+                speakOutput = handlerInput.t('WRONG_ANSWER');
+                if(hintUsed === 0){
+                    speakOutput += currentQuestion.first_hint
+                } else if(hintUsed === 1){
+                    speakOutput += currentQuestion.second_hint
+                } else {
+                    speakOutput = 'No more hints for you';
+                }
+                question.hintUsed = hintUsed + 1;
+                attributesManager.setSessionAttributes(sessionAttributes);
+            }
+            
         }
 
         
@@ -231,8 +270,6 @@ function getCurrentQuestion(weeklyMode) {
     const weekNumber = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7)
     let weekString = "week" + weekNumber.toString();
     let currentDay;
-    console.log(weeklyMode)
-    console.log(weekString);
     if(weeklyMode === true){
         currentDay = 0;
     } else {

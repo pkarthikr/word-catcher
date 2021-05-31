@@ -1,10 +1,9 @@
-// This sample demonstrates handling intents from an Alexa skill using the Alexa Skills Kit SDK (v2).
-// Please visit https://alexa.design/cookbook for additional examples on implementing slots, dialog management,
-// session persistence, api calls, and more.
 const Alexa = require('ask-sdk-core');
 const i18n = require('i18next');
 const languageStrings = require('./strings');
 const questions = require('./questions');
+const ddbAdapter = require('ask-sdk-dynamodb-persistence-adapter');
+const tableName = 'WORD_CATCHER_DEV';
 
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
@@ -86,6 +85,8 @@ const AnswersIntentHandler = {
         const answer = handlerInput.requestEnvelope.request.intent.slots.answer.value; 
         const actualAnswer = sessionAttributes.question.answer;
         let speakOutput = "";
+        let dailyanswerPoint = 0;
+        let weeklyAnswerPoint = 0;
         console.log("Answer");
         console.log(actualAnswer);
         const hintUsed = sessionAttributes.question.hintUsed;
@@ -99,44 +100,46 @@ const AnswersIntentHandler = {
                 let currentDay = today.getDay();
                 switch(currentDay){
                     case 0:
-                        speakOutput += "You get 5 points";
+                        weeklyAnswerPoint = 5;
                         break;
                     case 1:
-                        speakOutput += "You get 60 points";
+                        weeklyAnswerPoint = 60;
                         break;
                     case 2:
-                        speakOutput += "You get 50 points";
+                        weeklyAnswerPoint = 50;
                         break;
                     case 3:
-                        speakOutput += "You get 40 points";
+                        weeklyAnswerPoint = 40;
                         break;
                     case 4:
-                        speakOutput += "You get 30 points";
+                        weeklyAnswerPoint = 30;
                         break;
                     case 5:
-                        speakOutput += "You get 20 points";
+                        weeklyAnswerPoint = 20;
                         break;
                     case 6:
-                        speakOutput += "You get 10 points";
+                        weeklyAnswerPoint = 10;
                         break;
                 }
+                speakOutput += `You get ${weeklyAnswerPoint} points.<break time="0.1s"/>`
                 speakOutput += handlerInput.t('UPSELL_COME_BACK');
             } else {
                 speakOutput = handlerInput.t('CORRECT_ANSWER');
                 // The Points Mechanism 
                 switch(hintUsed){
                     case 0:
-                        speakOutput += "You get 10 points"; 
+                        dailyanswerPoint = 10;
                         break;
                     case 1:
-                        speakOutput += "You get 5 points"; 
+                        dailyanswerPoint = 5;
                         break; 
                     case 2:
-                        speakOutput += "You get 3 points";
+                        dailyanswerPoint = 3;
                         break;
                     default:
                     break;
                 }
+                speakOutput += `You get ${dailyanswerPoint} points.`;
                 speakOutput += handlerInput.t('WEEK_QUESTION_PROMPT');
                 question.questionMode = 'weekly';
                 attributesManager.setSessionAttributes(sessionAttributes);
@@ -167,8 +170,6 @@ const AnswersIntentHandler = {
             
         }
 
-        
-
         return handlerInput.responseBuilder
         .speak(speakOutput)
         .reprompt("Reprompt")
@@ -196,7 +197,15 @@ const CancelAndStopIntentHandler = {
             && (Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.CancelIntent'
                 || Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.StopIntent');
     },
-    handle(handlerInput) {
+    async handle(handlerInput) {
+        const attributesManager = handlerInput.attributesManager;
+        let birthdayAttributes = {
+            "year": "1998"
+            
+        };
+        attributesManager.setPersistentAttributes(birthdayAttributes);
+        await attributesManager.savePersistentAttributes();   
+
         const speakOutput = 'Goodbye!';
         return handlerInput.responseBuilder
             .speak(speakOutput)
@@ -278,10 +287,19 @@ function getCurrentQuestion(weeklyMode) {
     return questions[weekString][currentDay];
 
 }
+
+function getPersistenceAdapter(tableName) {
+    return new ddbAdapter.DynamoDbPersistenceAdapter({
+      tableName: tableName,
+      createTable: true,
+    });
+  }
+  
 // The SkillBuilder acts as the entry point for your skill, routing all request and response
 // payloads to the handlers above. Make sure any new handlers or interceptors you've
 // defined are included below. The order matters - they're processed top to bottom.
 exports.handler = Alexa.SkillBuilders.custom()
+    .withPersistenceAdapter(getPersistenceAdapter(tableName))
     .addRequestHandlers(
         LaunchRequestHandler,
         YesIntentHandler,

@@ -59,3 +59,5 @@ Architecture Decisions :
 Questions - JSON 
 User Preferences / User's Ranking / User's correct answers / history - DynamoDB table. 
 iScreemCodes : So instead of calculating the week and date, wouldnt it be a lot less code/overhead just to have the date field in the question
+
+

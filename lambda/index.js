@@ -4,6 +4,15 @@ const languageStrings = require('./strings');
 const questions = require('./questions');
 const ddbAdapter = require('ask-sdk-dynamodb-persistence-adapter');
 const tableName = 'WORD_CATCHER_DEV';
+const AWS = require('aws-sdk');
+var myDynamoDB = new AWS.DynamoDB({
+    endpoint: 'http://localhost:2525', // If you change the default url, change it here
+    accessKeyId: 'fakekey',
+    secretAccessKey: 'fake-secret-access-key',
+    region: "us-east-1",
+    apiVersion: 'latest'
+});
+
 
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
@@ -292,6 +301,7 @@ function getPersistenceAdapter(tableName) {
     return new ddbAdapter.DynamoDbPersistenceAdapter({
       tableName: tableName,
       createTable: true,
+      dynamoDBClient: myDynamoDB
     });
   }
   

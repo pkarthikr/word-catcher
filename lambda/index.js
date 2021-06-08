@@ -2,41 +2,55 @@ const Alexa = require('ask-sdk-core');
 const i18n = require('i18next');
 const languageStrings = require('./strings');
 const questions = require('./questions');
-const ddbAdapter = require('ask-sdk-dynamodb-persistence-adapter');
-const tableName = 'WORD_CATCHER_DEV';
-const AWS = require('aws-sdk');
-var myDynamoDB = new AWS.DynamoDB({
-    endpoint: 'http://localhost:2525', // If you change the default url, change it here
-    accessKeyId: 'fakekey',
-    secretAccessKey: 'fake-secret-access-key',
-    region: "us-east-1",
-    apiVersion: 'latest'
-});
+const dbHelper = require('./helpers/database');
 
 
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'LaunchRequest';
     },
-    async handle(handlerInput) {
+   async handle(handlerInput) {
         const attributesManager = handlerInput.attributesManager; 
         const sessionAttributes = attributesManager.getSessionAttributes();
-
         const { question } = sessionAttributes;
 
-        /* First Time User */
-        const speakOutput = handlerInput.t('WELCOME_MSG') + handlerInput.t('RULES') + handlerInput.t('READY');
-        let questionMode = 'daily';
-        sessionAttributes.question = {
-            'questionMode': questionMode,
-            'hintUsed': 0
-        }
-        attributesManager.setSessionAttributes(sessionAttributes);
+        const userID = handlerInput.requestEnvelope.context.System.user.userId;
+        var speakOutput = '';
+        await dbHelper.getUser(userID)
+        .then((data) => {
+            console.log("Success", data.Item);
+            // console.log("lastAnsweredDay",data.Item.lastAnsweredDay);
+            var currentDay = getCurrentDayNumber();
+            currentDay = currentDay.toString();
+
+            if(data.Item === undefined){
+                console.log("we are reaching here");
+                speakOutput += handlerInput.t('WELCOME_MSG') + handlerInput.t('RULES') + handlerInput.t('READY');
+                let questionMode = 'daily';
+                sessionAttributes.question = {
+                    'questionMode': questionMode,
+                    'hintUsed': 0
+                }
+                attributesManager.setSessionAttributes(sessionAttributes); 
+            } else {
+                 // Check what was the lastAnsweredDay's value
+                console.log("You have answered today's question");
+                speakOutput += handlerInput.t('ANSWERED_DAILY_QUESTION');   
+            }
+             
+        })
+        .catch((err) => {
+            console.log("error");
+            console.log(err);
+        });      
+
+          return handlerInput.responseBuilder
+          .speak(speakOutput)
+          .reprompt(speakOutput)
+          .getResponse();
+
         
-        return handlerInput.responseBuilder
-            .speak(speakOutput)
-            .reprompt(speakOutput)
-            .getResponse();
+   
     }
 };
 
@@ -85,7 +99,7 @@ const AnswersIntentHandler = {
             (Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AnswersOnlyIntent')
     },
-    handle(handlerInput) {
+    async handle(handlerInput) {
         //TODO: Use the resolved value, not the given value
         //TODO: If the answer is wrong, we are going to give them another chance. Hint Mechanism
         const attributesManager = handlerInput.attributesManager; 
@@ -96,6 +110,7 @@ const AnswersIntentHandler = {
         let speakOutput = "";
         let dailyanswerPoint = 0;
         let weeklyAnswerPoint = 0;
+        let userID = handlerInput.requestEnvelope.context.System.user.userId;
         console.log("Answer");
         console.log(actualAnswer);
         const hintUsed = sessionAttributes.question.hintUsed;
@@ -148,6 +163,31 @@ const AnswersIntentHandler = {
                     default:
                     break;
                 }
+                // Database Code 
+                var currentDay = getCurrentDayNumber();
+                currentDay = currentDay.toString();
+               
+                await dbHelper.updateLastAnsweredDay(userID, currentDay)
+                .then((data) => {
+                    console.log("Okay this is done");
+                    console.log(data);
+                })
+                .catch((err) => {
+                    console.log("error");
+                    console.log(err);
+                });     
+
+                // Figure out how to get the dynamodb key to be the current Day 
+                // Figure out the issue where required keys are not given a value
+                // Call DynamoDB to add the item to the table
+                // myDynamoDB.putItem(params, function(err, data) {
+                //     if (err) {
+                //     console.log("Error", err);
+                //     } else {
+                //     console.log("Success", data);
+                //     }
+                // });
+
                 speakOutput += `You get ${dailyanswerPoint} points.`;
                 speakOutput += handlerInput.t('WEEK_QUESTION_PROMPT');
                 question.questionMode = 'weekly';
@@ -280,6 +320,14 @@ const LocalisationRequestInterceptor = {
     }
 };
 
+function getCurrentDayNumber() {
+    const today = new Date();
+    const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+    const pastDaysOfYear = (today - firstDayOfYear) / 86400000;
+    const currentDayNumber = Math.ceil(pastDaysOfYear);
+    return currentDayNumber;
+}
+
 /* Question for the Day */
 function getCurrentQuestion(weeklyMode) {
     const today = new Date();
@@ -297,19 +345,10 @@ function getCurrentQuestion(weeklyMode) {
 
 }
 
-function getPersistenceAdapter(tableName) {
-    return new ddbAdapter.DynamoDbPersistenceAdapter({
-      tableName: tableName,
-      createTable: true,
-      dynamoDBClient: myDynamoDB
-    });
-  }
-  
 // The SkillBuilder acts as the entry point for your skill, routing all request and response
 // payloads to the handlers above. Make sure any new handlers or interceptors you've
 // defined are included below. The order matters - they're processed top to bottom.
 exports.handler = Alexa.SkillBuilders.custom()
-    .withPersistenceAdapter(getPersistenceAdapter(tableName))
     .addRequestHandlers(
         LaunchRequestHandler,
         YesIntentHandler,

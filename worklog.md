@@ -14,7 +14,13 @@ https://letmypeoplecode.com/posts/alexa_local_debugger/
 6/8: 
 * Clean up the DB Helper file so we do not have to use the variables twice. 
 * DB Helpers - Get User / Modify the function in such a way that we check for user Availability and not their last answered Day
+
+6/9: 
+* Worked on the Weekly Answer attempt capturing 
+
+
+
 Up Next: 
-* Check what was the lastAnsweredDay's value and they have answered this week's question or not
-* Depending on User's performance for the day, surface the right message
+* Write the logic in such a way that Weekly answer does not overwrite database row. 
+* Capture Daily and Weekly answers properly.
 * GameOn

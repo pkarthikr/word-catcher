@@ -97,5 +97,14 @@ module.exports = {
         {question:"Thursday Question?",answer:"clock", first_hint:'This is your first hint', second_hint:'This is your second hint'},
         {question:"Friday Question?",answer:"clock", first_hint:'This is your first hint', second_hint:'This is your second hint'},
         {question:"Saturday Question?",answer:"clock", first_hint:'This is your first hint', second_hint:'This is your second hint'},
+    ],
+    "week25": [
+        {question:"Sunday Question",answer:"time", first_hint:'This is your first hint', second_hint:'This is your second hint'},
+        {question:"Monday Question?",answer:"clock", first_hint:'This is your first hint', second_hint:'This is your second hint'},
+        {question:"Tuesday Question?",answer:"clock", first_hint:'This is your first hint', second_hint:'This is your second hint'},
+        {question:"Wednesday Question?",answer:"clock", first_hint:'This is your first hint', second_hint:'This is your second hint'},
+        {question:"Thursday Question?",answer:"clock", first_hint:'This is your first hint', second_hint:'This is your second hint'},
+        {question:"Friday Question?",answer:"clock", first_hint:'This is your first hint', second_hint:'This is your second hint'},
+        {question:"Saturday Question?",answer:"clock", first_hint:'This is your first hint', second_hint:'This is your second hint'},
     ]
 }

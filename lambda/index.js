@@ -19,12 +19,8 @@ const LaunchRequestHandler = {
         await dbHelper.getUser(userID)
         .then((data) => {
             console.log("Success", data.Item);
-            // console.log("lastAnsweredDay",data.Item.lastAnsweredDay);
-            var currentDay = getCurrentDayNumber();
-            currentDay = currentDay.toString();
-
+           
             if(data.Item === undefined){
-                console.log("we are reaching here");
                 speakOutput += handlerInput.t('WELCOME_MSG') + handlerInput.t('RULES') + handlerInput.t('READY');
                 let questionMode = 'daily';
                 sessionAttributes.question = {
@@ -33,9 +29,41 @@ const LaunchRequestHandler = {
                 }
                 attributesManager.setSessionAttributes(sessionAttributes); 
             } else {
+                // if(data.Item.)
                  // Check what was the lastAnsweredDay's value
-                console.log("You have answered today's question");
-                speakOutput += handlerInput.t('ANSWERED_DAILY_QUESTION');   
+                 var currentDay = getCurrentDayOrWeek('day');
+                 currentDay = currentDay.toString();
+                console.log(data.Item.lastAnsweredDay["S"]);
+                 if (data.Item.lastAnsweredDay["S"] != currentDay){
+                    speakOutput += handlerInput.t('WELCOME_BACK') + handlerInput.t('READY');
+                    let questionMode = 'daily';
+                    sessionAttributes.question = {
+                        'questionMode': questionMode,
+                        'hintUsed': 0
+                    }
+                    attributesManager.setSessionAttributes(sessionAttributes); 
+                 } else {
+                     var currentWeek = getCurrentDayOrWeek('week');
+                     let today = new Date();
+                     var currentDay = today.getDay();
+                     currentDay = currentDay.toString();
+                    
+                     if(data.Item.lastAnsweredWeek === undefined){
+                        let questionMode = 'weekly';
+                        sessionAttributes.question = {
+                            'questionMode': questionMode,
+                            'hintUsed': 0
+                        }
+                        attributesManager.setSessionAttributes(sessionAttributes); 
+                        speakOutput += "You have answered today's question. Would you like to take a shot at this week's theme?"
+                       
+                     } else {
+                        console.log("You have answered today's question");
+                        speakOutput += handlerInput.t('ANSWERED_DAILY_QUESTION');   
+                     }
+                    
+                 }
+                
             }
              
         })
@@ -48,9 +76,6 @@ const LaunchRequestHandler = {
           .speak(speakOutput)
           .reprompt(speakOutput)
           .getResponse();
-
-        
-   
     }
 };
 
@@ -145,6 +170,17 @@ const AnswersIntentHandler = {
                         weeklyAnswerPoint = 10;
                         break;
                 }
+                var currentWeek = getCurrentDayOrWeek('week');
+                await dbHelper.updateWeeklyAnswerAttempt(userID, currentWeek)
+                .then((data) => {
+                    console.log("Okay this is done");
+                    console.log(data);
+                })
+                .catch((err) => {
+                    console.log("error");
+                    console.log(err);
+                });     
+
                 speakOutput += `You get ${weeklyAnswerPoint} points.<break time="0.1s"/>`
                 speakOutput += handlerInput.t('UPSELL_COME_BACK');
             } else {
@@ -164,29 +200,18 @@ const AnswersIntentHandler = {
                     break;
                 }
                 // Database Code 
-                var currentDay = getCurrentDayNumber();
+                var currentDay = getCurrentDayOrWeek('day');
                 currentDay = currentDay.toString();
                
                 await dbHelper.updateLastAnsweredDay(userID, currentDay)
                 .then((data) => {
-                    console.log("Okay this is done");
+                    console.log("Okay answer for the day captured successfully");
                     console.log(data);
                 })
                 .catch((err) => {
                     console.log("error");
                     console.log(err);
                 });     
-
-                // Figure out how to get the dynamodb key to be the current Day 
-                // Figure out the issue where required keys are not given a value
-                // Call DynamoDB to add the item to the table
-                // myDynamoDB.putItem(params, function(err, data) {
-                //     if (err) {
-                //     console.log("Error", err);
-                //     } else {
-                //     console.log("Success", data);
-                //     }
-                // });
 
                 speakOutput += `You get ${dailyanswerPoint} points.`;
                 speakOutput += handlerInput.t('WEEK_QUESTION_PROMPT');
@@ -196,7 +221,21 @@ const AnswersIntentHandler = {
         } else {
             if(sessionAttributes.question.questionMode === 'weekly'){
                 let today = new Date();
-                let currentDay = today.getDay();
+                var currentDay = today.getDay();
+                currentDay = currentDay.toString();
+
+                console.log("Entering the if block for weekly wrong answers")
+                var currentWeek = getCurrentDayOrWeek('week');
+                await dbHelper.updateWeeklyAnswerAttempt(userID, currentWeek, currentDay)
+                .then((data) => {
+                    console.log("Okay this is done");
+                    console.log(data);
+                })
+                .catch((err) => {
+                    console.log("error");
+                    console.log(err);
+                });     
+
                 if(currentDay != 0){
                     speakOutput += handlerInput.t('WEEKLY_WRONG_ANSWER');
                 } else {
@@ -320,13 +359,21 @@ const LocalisationRequestInterceptor = {
     }
 };
 
-function getCurrentDayNumber() {
+function getCurrentDayOrWeek(mode) {
     const today = new Date();
     const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
     const pastDaysOfYear = (today - firstDayOfYear) / 86400000;
     const currentDayNumber = Math.ceil(pastDaysOfYear);
-    return currentDayNumber;
+    const weekNumber = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7)
+    let weekString = "week" + weekNumber.toString();
+
+    if(mode == "day"){
+        return currentDayNumber;
+    } else {
+        return weekString;
+    }
 }
+
 
 /* Question for the Day */
 function getCurrentQuestion(weeklyMode) {

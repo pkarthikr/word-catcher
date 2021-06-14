@@ -59,4 +59,65 @@ dbHelper.prototype.updateLastAnsweredDay = (userID, currentDay) => {
   });
 }
 
+/* Function to insert the user's answer attempt for the weekly theme*/
+dbHelper.prototype.updateWeeklyAnswerAttempt = (userID, currentWeek, currentDay) => {
+  return new Promise((resolve, reject) => {
+
+        var params;
+        if (currentDay === undefined){
+          params = {
+              ExpressionAttributeNames: {
+                "#LAT": "lastAnsweredWeek"
+              },
+              ExpressionAttributeValues: {
+                ":w": {
+                  S: currentWeek
+                }
+              },
+              Key: {
+                "userID": {
+                  S: userID
+                }
+              },
+              ReturnValues: "ALL_NEW",
+              TableName: tableName,
+              UpdateExpression: "SET #LAT = :w"
+          };
+        } else {
+          params = {
+              ExpressionAttributeNames: {
+                "#LAT": "lastAnsweredWeek",
+                "#AT": "attempt"
+              },
+              ExpressionAttributeValues: {
+                ":w": {
+                  S: currentWeek
+                },
+                ":a": {
+                  N: currentDay
+                }
+              },
+              Key: {
+                "userID": {
+                  S: userID
+                }
+              },
+              ReturnValues: "ALL_NEW",
+              TableName: tableName,
+              UpdateExpression: "SET #LAT = :w, #AT = :a"
+          };
+        } 
+
+        myDynamoDB.updateItem(params, (err,data) => {
+            if(err){
+              return reject(err)
+            } else {
+                console.log(data);
+                resolve(data);
+            }
+        });
+        
+  });
+}
+
 module.exports = new dbHelper();

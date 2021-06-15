@@ -6,6 +6,7 @@
             "request": "launch",
             "name": "Launch Program",
             "program": "${workspaceRoot}\\local-debugger.js",
+            "console": "integratedTerminal",
             "args": [
                 "--portNumber", "3001",
                 "--skillEntryFile", "${workspaceRoot}\\lambda\\index.js",

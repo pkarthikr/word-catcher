@@ -36,6 +36,30 @@ dbHelper.prototype.getUser = (user) => {
     });
 }
 
+/* Function to add Details of the User */
+dbHelper.prototype.addUser = (userID, player) => {
+  return new Promise((resolve, reject) => {
+    var params = {
+        TableName: tableName,
+        Item: {
+          'userID' : {S: userID},
+          'externalPlayerID': {S: player.externalPlayerID},
+          'gamerName': {S: player.profile.name},
+          'gamerAvatar': {S: player.profile.avatar}
+        }
+    };
+
+    myDynamoDB.putItem(params, (err,data) => {
+        if(err){
+          return reject(err)
+        } else {
+            console.log(data);
+            resolve(data);
+        }
+    })
+    
+  });
+}
 /* Function to insert the user's successful answer */
 dbHelper.prototype.updateLastAnsweredDay = (userID, currentDay) => {
   return new Promise((resolve, reject) => {

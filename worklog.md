@@ -18,9 +18,11 @@ https://letmypeoplecode.com/posts/alexa_local_debugger/
 6/9: 
 * Worked on the Weekly Answer attempt capturing 
 
+6/14:
+* Write the logic in such a way that Weekly answer does not overwrite database row. 
+* Weekly / Daily Answer check
 
 
 Up Next: 
-* Write the logic in such a way that Weekly answer does not overwrite database row. 
 * Capture Daily and Weekly answers properly.
 * GameOn

@@ -3,6 +3,7 @@ const i18n = require('i18next');
 const languageStrings = require('./strings');
 const questions = require('./questions');
 const dbHelper = require('./helpers/database');
+const gameOn = require('./helpers/gameOn.js');
 
 
 const LaunchRequestHandler = {
@@ -21,13 +22,23 @@ const LaunchRequestHandler = {
             console.log("Success", data.Item);
            
             if(data.Item === undefined){
-                speakOutput += handlerInput.t('WELCOME_MSG') + handlerInput.t('RULES') + handlerInput.t('READY');
-                let questionMode = 'daily';
-                sessionAttributes.question = {
-                    'questionMode': questionMode,
-                    'hintUsed': 0
-                }
-                attributesManager.setSessionAttributes(sessionAttributes); 
+                let player = await gameOn.newPlayer();
+                console.log(player)
+                
+                // await dbHelper.addUser(userID, player)
+                // .then((playerData) => {
+                    speakOutput += handlerInput.t('WELCOME_MSG') + handlerInput.t('RULES') + handlerInput.t('READY');
+                    let questionMode = 'daily';
+                    sessionAttributes.question = {
+                        'questionMode': questionMode,
+                        'hintUsed': 0
+                    }
+                    attributesManager.setSessionAttributes(sessionAttributes); 
+                // }).catch((err) => {
+                //     console.log("error");
+                //     console.log(err);
+                // });    
+               
             } else {
                 // if(data.Item.)
                  // Check what was the lastAnsweredDay's value

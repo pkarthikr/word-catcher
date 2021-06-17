@@ -61,7 +61,7 @@ User Preferences / User's Ranking / User's correct answers / history - DynamoDB 
 iScreemCodes : So instead of calculating the week and date, wouldnt it be a lot less code/overhead just to have the date field in the question
 
 Command to run DynamoDB locally
-java -D"java.library.path=./DynamoDBLocal_lib" -jar DynamoDBLocal.jar -port 2525
+java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -port 2525
 
 
 

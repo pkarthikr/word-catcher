@@ -18,15 +18,18 @@ const LaunchRequestHandler = {
         const userID = handlerInput.requestEnvelope.context.System.user.userId;
         var speakOutput = '';
         await dbHelper.getUser(userID)
-        .then((data) => {
+        .then(async (data) => {
             console.log("Success", data.Item);
            
             if(data.Item === undefined){
                 let player = await gameOn.newPlayer();
+                let match = await gameOn.enterMatch
                 console.log(player)
+                console.log(player.externalPlayerId);
+
                 
-                // await dbHelper.addUser(userID, player)
-                // .then((playerData) => {
+                await dbHelper.addUser(userID, player)
+                .then((playerData) => {
                     speakOutput += handlerInput.t('WELCOME_MSG') + handlerInput.t('RULES') + handlerInput.t('READY');
                     let questionMode = 'daily';
                     sessionAttributes.question = {
@@ -34,18 +37,26 @@ const LaunchRequestHandler = {
                         'hintUsed': 0
                     }
                     attributesManager.setSessionAttributes(sessionAttributes); 
-                // }).catch((err) => {
-                //     console.log("error");
-                //     console.log(err);
-                // });    
+                }).catch((err) => {
+                    console.log("error");
+                    console.log(err);
+                });    
                
             } else {
-                // if(data.Item.)
-                 // Check what was the lastAnsweredDay's value
-                 var currentDay = getCurrentDayOrWeek('day');
-                 currentDay = currentDay.toString();
-                console.log(data.Item.lastAnsweredDay["S"]);
-                 if (data.Item.lastAnsweredDay["S"] != currentDay){
+                var currentDay = getCurrentDayOrWeek('day');
+                currentDay = currentDay.toString();
+
+                if (!data.Item.hasOwnProperty('lastAnsweredDay')){
+                    speakOutput += handlerInput.t('WELCOME_MSG') + handlerInput.t('RULES') + handlerInput.t('READY');
+                    let questionMode = 'daily';
+                    sessionAttributes.question = {
+                        'questionMode': questionMode,
+                        'hintUsed': 0
+                    }
+                    attributesManager.setSessionAttributes(sessionAttributes); 
+                } else if (data.Item.lastAnsweredDay["S"] != currentDay){
+                   
+                    console.log(data.Item.lastAnsweredDay["S"]);
                     speakOutput += handlerInput.t('WELCOME_BACK') + handlerInput.t('READY');
                     let questionMode = 'daily';
                     sessionAttributes.question = {
@@ -53,28 +64,21 @@ const LaunchRequestHandler = {
                         'hintUsed': 0
                     }
                     attributesManager.setSessionAttributes(sessionAttributes); 
-                 } else {
-                     var currentWeek = getCurrentDayOrWeek('week');
-                     let today = new Date();
-                     var currentDay = today.getDay();
-                     currentDay = currentDay.toString();
-                    
-                     if(data.Item.lastAnsweredWeek === undefined){
-                        let questionMode = 'weekly';
-                        sessionAttributes.question = {
-                            'questionMode': questionMode,
-                            'hintUsed': 0
-                        }
-                        attributesManager.setSessionAttributes(sessionAttributes); 
-                        speakOutput += "You have answered today's question. Would you like to take a shot at this week's theme?"
-                       
-                     } else {
-                        console.log("You have answered today's question");
-                        speakOutput += handlerInput.t('ANSWERED_DAILY_QUESTION');   
-                     }
-                    
-                 }
-                
+                } else {
+                    if(data.Item.lastAnsweredWeek === undefined){
+                       let questionMode = 'weekly';
+                       sessionAttributes.question = {
+                           'questionMode': questionMode,
+                           'hintUsed': 0
+                       }
+                       attributesManager.setSessionAttributes(sessionAttributes); 
+                       speakOutput += "You have answered today's question. Would you like to take a shot at this week's theme?"
+                      
+                    } else {
+                       console.log("You have answered today's question");
+                       speakOutput += handlerInput.t('ANSWERED_DAILY_QUESTION');   
+                    }
+                }
             }
              
         })
@@ -151,6 +155,7 @@ const AnswersIntentHandler = {
         console.log(actualAnswer);
         const hintUsed = sessionAttributes.question.hintUsed;
             console.log("Hint Used"+hintUsed);
+        
 
         if(answer === actualAnswer){
             //TODO: Have the right mechanism for the weekly answers
@@ -213,7 +218,7 @@ const AnswersIntentHandler = {
                 // Database Code 
                 var currentDay = getCurrentDayOrWeek('day');
                 currentDay = currentDay.toString();
-               
+                
                 await dbHelper.updateLastAnsweredDay(userID, currentDay)
                 .then((data) => {
                     console.log("Okay answer for the day captured successfully");
@@ -222,7 +227,9 @@ const AnswersIntentHandler = {
                 .catch((err) => {
                     console.log("error");
                     console.log(err);
-                });     
+                }); 
+                var player = await gameOn.refreshPlayerSession(player);    
+                await gameOn.submitScore(player, dailyanswerPoint);
 
                 speakOutput += `You get ${dailyanswerPoint} points.`;
                 speakOutput += handlerInput.t('WEEK_QUESTION_PROMPT');

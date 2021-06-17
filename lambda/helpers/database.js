@@ -38,22 +38,32 @@ dbHelper.prototype.getUser = (user) => {
 
 /* Function to add Details of the User */
 dbHelper.prototype.addUser = (userID, player) => {
+  console.log(player.externalPlayerId);
   return new Promise((resolve, reject) => {
+    // var params = {
+    //     TableName: tableName,
+    //     Item: {
+    //       'userID' : {S: userID},
+    //       'externalPlayerID': {S: player.externalPlayerId},
+    //       'gamerName': {S: player.profile.name},
+    //       'gamerAvatar': {S: player.profile.avatar}
+    //     }
+    // };
+    const marshalledPlayer = AWS.DynamoDB.Converter.marshall({ player });
+    console.log(marshalledPlayer);
     var params = {
-        TableName: tableName,
-        Item: {
-          'userID' : {S: userID},
-          'externalPlayerID': {S: player.externalPlayerID},
-          'gamerName': {S: player.profile.name},
-          'gamerAvatar': {S: player.profile.avatar}
-        }
-    };
+          TableName: tableName,
+          Item: {
+            'userID' : {S: userID},
+            'player': marshalledPlayer.player
+          }
+      };
 
     myDynamoDB.putItem(params, (err,data) => {
         if(err){
           return reject(err)
         } else {
-            console.log(data);
+            console.log("successs");
             resolve(data);
         }
     })
@@ -64,14 +74,25 @@ dbHelper.prototype.addUser = (userID, player) => {
 dbHelper.prototype.updateLastAnsweredDay = (userID, currentDay) => {
   return new Promise((resolve, reject) => {
         var params = {
+            ExpressionAttributeNames: {
+              "#LAD": "lastAnsweredDay"
+            },
+            ExpressionAttributeValues: {
+              ":d": {
+                S: currentDay
+              }
+            },
+            Key: {
+              "userID": {
+                S: userID
+              }
+            },
+            ReturnValues: "ALL_NEW",
             TableName: tableName,
-            Item: {
-              'userID' : {S: userID},
-              'lastAnsweredDay': {S: currentDay}
-            }
-        };
+            UpdateExpression: "SET #LAD = :d"
+          };
 
-        myDynamoDB.putItem(params, (err,data) => {
+        myDynamoDB.updateItem(params, (err,data) => {
             if(err){
               return reject(err)
             } else {

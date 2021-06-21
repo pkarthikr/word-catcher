@@ -19,7 +19,7 @@ const LaunchRequestHandler = {
         var speakOutput = '';
         await dbHelper.getUser(userID)
         .then(async (data) => {
-            console.log("Success", data.Item);
+            console.log(data);
            
             if(data.Item === undefined){
                 let player = await gameOn.newPlayer();
@@ -43,10 +43,12 @@ const LaunchRequestHandler = {
                 });    
                
             } else {
+                sessionAttributes.player = data.Item.player;
                 var currentDay = getCurrentDayOrWeek('day');
                 currentDay = currentDay.toString();
 
                 if (!data.Item.hasOwnProperty('lastAnsweredDay')){
+                    console.log("are we here?????");
                     speakOutput += handlerInput.t('WELCOME_MSG') + handlerInput.t('RULES') + handlerInput.t('READY');
                     let questionMode = 'daily';
                     sessionAttributes.question = {
@@ -54,7 +56,7 @@ const LaunchRequestHandler = {
                         'hintUsed': 0
                     }
                     attributesManager.setSessionAttributes(sessionAttributes); 
-                } else if (data.Item.lastAnsweredDay["S"] != currentDay){
+                } else if (data.Item.lastAnsweredDay != currentDay){
                    
                     console.log(data.Item.lastAnsweredDay["S"]);
                     speakOutput += handlerInput.t('WELCOME_BACK') + handlerInput.t('READY');
@@ -155,7 +157,7 @@ const AnswersIntentHandler = {
         console.log(actualAnswer);
         const hintUsed = sessionAttributes.question.hintUsed;
             console.log("Hint Used"+hintUsed);
-        
+        var player = sessionAttributes.player;
 
         if(answer === actualAnswer){
             //TODO: Have the right mechanism for the weekly answers
@@ -219,17 +221,17 @@ const AnswersIntentHandler = {
                 var currentDay = getCurrentDayOrWeek('day');
                 currentDay = currentDay.toString();
                 
-                await dbHelper.updateLastAnsweredDay(userID, currentDay)
-                .then((data) => {
-                    console.log("Okay answer for the day captured successfully");
-                    console.log(data);
-                })
-                .catch((err) => {
-                    console.log("error");
-                    console.log(err);
-                }); 
-                var player = await gameOn.refreshPlayerSession(player);    
-                await gameOn.submitScore(player, dailyanswerPoint);
+                // await dbHelper.updateLastAnsweredDay(userID, currentDay)
+                // .then((data) => {
+                //     console.log("Okay answer for the day captured successfully");
+                //     console.log(data);
+                // })
+                // .catch((err) => {
+                //     console.log("error");
+                //     console.log(err);
+                // }); 
+                let gameONplayer = await gameOn.refreshPlayerSession(player);    
+                await gameOn.submitScore(gameONplayer, dailyanswerPoint);
 
                 speakOutput += `You get ${dailyanswerPoint} points.`;
                 speakOutput += handlerInput.t('WEEK_QUESTION_PROMPT');

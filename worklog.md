@@ -22,7 +22,10 @@ https://letmypeoplecode.com/posts/alexa_local_debugger/
 * Write the logic in such a way that Weekly answer does not overwrite database row. 
 * Weekly / Daily Answer check
 
+6/21:
+* Integrated DocumentClient in DynamoDB
+* Submitted Score successfully using GameON SDK
 
 Up Next: 
-* Capture Daily and Weekly answers properly.
-* GameOn
+* Try and figure out why values are not reflecting on GameON SDK
+* Update DB Helpers to Document Client

@@ -3,7 +3,7 @@ const tableName = 'word_catcher_dev_one';
 AWS.config.update({region:'us-east-1'});
 var dbHelper = function() {};
 
-var myDynamoDB = new AWS.DynamoDB({
+var myDynamoDB = new AWS.DynamoDB.DocumentClient({
     endpoint: 'http://localhost:2525', // If you change the default url, change it here
     accessKeyId: 'fakekey',
     secretAccessKey: 'fake-secret-access-key',
@@ -17,17 +17,21 @@ dbHelper.prototype.getUser = (user) => {
         var params = {
             TableName: tableName,
             Key: {
-              'userID': {S: user}
+              'userID':  user
             }
           };
 
-          myDynamoDB.getItem(params, (err,data) => {
+          myDynamoDB.get(params, (err,data) => {
               if(err){
+                console.log("we are error");
                 return reject(err)
               } else {
-                  console.log("Before resolving");
-                  console.log(params);
-                  console.log(user);
+                  // let resolvedData = data.Item.player;
+                  // let marshalledData = AWS.DynamoDB.Converter.unmarshall({ resolvedData });
+                  // console.log("Before resolving");
+                  // console.log(marshalledData)
+                  // console.log(params);
+                  console.log("we do end up here");
                   console.log(data);
                   resolve(data);
               }
@@ -40,26 +44,15 @@ dbHelper.prototype.getUser = (user) => {
 dbHelper.prototype.addUser = (userID, player) => {
   console.log(player.externalPlayerId);
   return new Promise((resolve, reject) => {
-    // var params = {
-    //     TableName: tableName,
-    //     Item: {
-    //       'userID' : {S: userID},
-    //       'externalPlayerID': {S: player.externalPlayerId},
-    //       'gamerName': {S: player.profile.name},
-    //       'gamerAvatar': {S: player.profile.avatar}
-    //     }
-    // };
-    const marshalledPlayer = AWS.DynamoDB.Converter.marshall({ player });
-    console.log(marshalledPlayer);
     var params = {
           TableName: tableName,
           Item: {
-            'userID' : {S: userID},
-            'player': marshalledPlayer.player
+            'userID' : userID,
+            'player': player
           }
       };
 
-    myDynamoDB.putItem(params, (err,data) => {
+    myDynamoDB.put(params, (err,data) => {
         if(err){
           return reject(err)
         } else {

@@ -26,6 +26,10 @@ https://letmypeoplecode.com/posts/alexa_local_debugger/
 * Integrated DocumentClient in DynamoDB
 * Submitted Score successfully using GameON SDK
 
-Up Next: 
-* Try and figure out why values are not reflecting on GameON SDK
+6/23:
+* Refactored the code
+* Got the score from GameOn and displayed the information to customer. 
 * Update DB Helpers to Document Client
+
+Up Next: 
+* Score Logic in GameON SDK (Figure why it is not adding up)

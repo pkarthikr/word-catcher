@@ -23,15 +23,8 @@ dbHelper.prototype.getUser = (user) => {
 
           myDynamoDB.get(params, (err,data) => {
               if(err){
-                console.log("we are error");
                 return reject(err)
               } else {
-                  // let resolvedData = data.Item.player;
-                  // let marshalledData = AWS.DynamoDB.Converter.unmarshall({ resolvedData });
-                  // console.log("Before resolving");
-                  // console.log(marshalledData)
-                  // console.log(params);
-                  console.log("we do end up here");
                   console.log(data);
                   resolve(data);
               }
@@ -71,21 +64,17 @@ dbHelper.prototype.updateLastAnsweredDay = (userID, currentDay) => {
               "#LAD": "lastAnsweredDay"
             },
             ExpressionAttributeValues: {
-              ":d": {
-                S: currentDay
-              }
+              ":d": currentDay    
             },
             Key: {
-              "userID": {
-                S: userID
-              }
+              "userID": userID
             },
             ReturnValues: "ALL_NEW",
             TableName: tableName,
             UpdateExpression: "SET #LAD = :d"
           };
 
-        myDynamoDB.updateItem(params, (err,data) => {
+        myDynamoDB.update(params, (err,data) => {
             if(err){
               return reject(err)
             } else {
@@ -108,14 +97,10 @@ dbHelper.prototype.updateWeeklyAnswerAttempt = (userID, currentWeek, currentDay)
                 "#LAT": "lastAnsweredWeek"
               },
               ExpressionAttributeValues: {
-                ":w": {
-                  S: currentWeek
-                }
+                ":w": currentWeek
               },
               Key: {
-                "userID": {
-                  S: userID
-                }
+                "userID": userID
               },
               ReturnValues: "ALL_NEW",
               TableName: tableName,
@@ -128,17 +113,11 @@ dbHelper.prototype.updateWeeklyAnswerAttempt = (userID, currentWeek, currentDay)
                 "#AT": "attempt"
               },
               ExpressionAttributeValues: {
-                ":w": {
-                  S: currentWeek
-                },
-                ":a": {
-                  N: currentDay
-                }
+                ":w": currentWeek,
+                ":a": currentDay
               },
               Key: {
-                "userID": {
-                  S: userID
-                }
+                "userID": userID
               },
               ReturnValues: "ALL_NEW",
               TableName: tableName,
@@ -146,7 +125,7 @@ dbHelper.prototype.updateWeeklyAnswerAttempt = (userID, currentWeek, currentDay)
           };
         } 
 
-        myDynamoDB.updateItem(params, (err,data) => {
+        myDynamoDB.update(params, (err,data) => {
             if(err){
               return reject(err)
             } else {

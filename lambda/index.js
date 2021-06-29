@@ -201,7 +201,7 @@ const AnswersIntentHandler = {
                 console.log("We are in the Weekly Correct Answer block");
                 console.log(playerScore);
 
-                speakOutput += `You get ${weeklyAnswerPoint} points.<break time="0.1s"/> And with that you are ${playerScore.ordinalRank} on our leaderboard for this week.`
+                speakOutput += `Correct answer. You get ${weeklyAnswerPoint} points.<break time="0.1s"/> And with that you are ${playerScore.ordinalRank} on our leaderboard for this week with a total of ${playerScore.score} points.`
 
                 speakOutput += handlerInput.t('UPSELL_COME_BACK');
             } else {
@@ -306,14 +306,7 @@ const CancelAndStopIntentHandler = {
                 || Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.StopIntent');
     },
     async handle(handlerInput) {
-        const attributesManager = handlerInput.attributesManager;
-        let birthdayAttributes = {
-            "year": "1998"
-            
-        };
-        attributesManager.setPersistentAttributes(birthdayAttributes);
-        await attributesManager.savePersistentAttributes();   
-
+   
         const speakOutput = 'Goodbye!';
         return handlerInput.responseBuilder
             .speak(speakOutput)
